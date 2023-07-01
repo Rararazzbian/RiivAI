@@ -106,7 +106,6 @@ The bot will try to find a plugin that can perform this task (in this case being
 ```json
 {
   "id": "chatcmpl-123",
-  ...
   "choices": [{
     "index": 0,
     "message": {

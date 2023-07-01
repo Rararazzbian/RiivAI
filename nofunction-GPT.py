@@ -41,7 +41,7 @@ def add_msg(conversation_id, message):
 
 # Define a function to get the list of messages by conversation ID
 def get_msg(conversation_id):
-    with open('initial_prompt_local.txt', 'r') as file:
+    with open('initial_prompt.txt', 'r') as file:
         initial_prompt = file.read()
     # Check if the conversation ID exists in the dictionary
     if conversation_id in messages_dict:

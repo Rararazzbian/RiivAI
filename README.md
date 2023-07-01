@@ -35,7 +35,15 @@ LLM_ENDPOINT=https://api.openai.com/v1/chat/completions
 LLM_MODEL=MODEL NAME (aka gpt-3.5-turbo-0613)
 ```
 
-Replace the values with your own API key, bot token, language model endpoint and name.
+Replace the values with your own API key, bot token, language model endpoint, model name, etc.
+
+To setup the system prompt, create an `initial_prompt.txt` file in the root folder of the project and fill it with your initial prompt message, this will setup how your AI will behave, for example you could write:
+
+```
+You are SoserAI, an AI companion.
+Lore:
+Your backstory is blah blah blah, setup the lore of the character or whatever you would like, etc.
+```
 
 To run the bot, run the Start.bat file included in the folder, the bot should soon print that it has connected to Discord and start listening for messages.
 

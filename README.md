@@ -35,7 +35,7 @@ Replace the values with your own API key, bot token, language model endpoint, mo
 To setup the system prompt, create an `initial_prompt.txt` file in the root folder of the project and fill it with your initial prompt message, this will setup how your AI will behave, for example you could write:
 
 ```
-You are SoserAI, an AI companion.
+You are RiivAI, an AI companion.
 Lore:
 Your backstory is blah blah blah, setup the lore of the character or whatever you would like, etc.
 ```

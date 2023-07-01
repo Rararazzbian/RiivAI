@@ -1,6 +1,8 @@
 # SoserAI
 A Discord bot that uses OpenAI's GPT to generate responses and call external functions.
 
+# THIS AI IS UNFINISHED AND WILL NOT FUNCTION CORRECTLY, DO NOT TRY TO RUN THIS.
+
 The bot uses the following environment variables:
 
 - `OPENAI_API_KEY` for the OpenAI API key.

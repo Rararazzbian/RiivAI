@@ -3,3 +3,7 @@ discord==2.3.1
 asyncio==3.4.3
 python-dotenv==1.0.0
 pymemtrace==0.1.5
+googlesearch-python
+BeautifulSoup4
+python-youtube
+faapi

@@ -4,8 +4,8 @@ from requests.cookies import RequestsCookieJar
 
 # Create a cookie jar object and set the cookies a and b
 cookies = RequestsCookieJar()
-cookies.set("a", "88c0bd8d-f196-4813-a0c6-f263e3af2740")
-cookies.set("b", "5cf5e58d-ae7d-49e2-b4af-77084199c684")
+cookies.set("a", "FURAFFINITY_A_COOKIE")
+cookies.set("b", "FURAFFINITY_B_COOKIE")
 
 # Create a FAAPI object with the cookies
 api = faapi.FAAPI(cookies)

@@ -83,7 +83,7 @@ async def ai_reply(input, conversation_id, message):
     # Set up headers
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer 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',
+        'Authorization': f'Bearer {OPENAI_API_KEY}',
     }
     # Set up data
     data = {

@@ -1,0 +1,14 @@
+{
+  "name": "read_from_url",
+  "description": "Returns the text from a URL link",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "name": "url",
+        "type": "string",
+        "description": "The URL link"
+      }
+    }
+  }
+}

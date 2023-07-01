@@ -1,4 +1,4 @@
-# SoserAI
+# RiivAI
 A Discord bot that uses OpenAI's GPT to generate responses and call external functions.
 
 # THIS BOT IS UNFINISHED AND WILL NOT FUNCTION CORRECTLY, DO NOT TRY TO RUN THIS.

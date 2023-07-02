@@ -40,7 +40,7 @@ To set up the environment variables, modify the `example.env` file in the root f
 OPENAI_API_KEY=<YOUR OPENAI KEY>
 DISCORD_TOKEN=<YOUR DISCORD BOT TOKEN>
 LLM_ENDPOINT=https://api.openai.com/v1/chat/completions
-LLM_MODEL=<gpt-3.5-turbo-0613
+LLM_MODEL=gpt-3.5-turbo-0613
 GOOGLESEARCH_API_KEY=<YOUR GOOGLE SEARCH API KEY>
 GOOGLESEARCH_CSE_ID=<YOUR GOOGLE SEARCH CSI ID>
 YOUTUBE_API_KEY=<YOUTUBE_DATA_API_KEY>
@@ -63,6 +63,7 @@ Give a name to the bot and click “Create.”
 Click on the “Bot” tab and use the “Click to Reveal Token” or “Copy” button under your bot username, paste this into the `example.env` file replacing the `<YOUR DISCORD BOT TOKEN>`.
 
 The rest of the variables should be self explanitory and easy tutorials are not hard to find.
+After you have filled in all the variables, rename the `example.env` to `.env`
 
 ## Setting up the System Prompt for your bot
 To setup the system prompt, create an `initial_prompt.txt` file in the root folder of the project and fill it with your initial prompt message, this will setup how your AI will behave, for example you could write:

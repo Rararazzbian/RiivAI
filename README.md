@@ -57,7 +57,7 @@ Your backstory is blah blah blah, setup the lore of the character or whatever yo
 
 To run the bot, run the Start.bat file included in the folder, the bot should soon print that it has connected to Discord and start listening for messages.
 
-## How to create a plugin for SoserAI
+## How to create a plugin for RiivAI
 To create a new plugin, follow these steps:
 
 Create a new folder in the plugins folder with the name of your plugin (e.g. `google_search`).

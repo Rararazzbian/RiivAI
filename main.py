@@ -9,6 +9,9 @@ import discord
 from discord.ext import commands
 import asyncio
 from dotenv import load_dotenv
+import re
+import urllib.request
+import tempfile
 
 # Grab the environment variables for the bot
 load_dotenv()
@@ -76,8 +79,6 @@ def get_functions():
 
 # Define a function which accepts a function and its arguments and calls it
 def run_function(function_name, arguments):
-    print(function_name)
-    print(arguments)
     plugin_path = f"plugins/{function_name}/{function_name}.py"
     spec = importlib.util.spec_from_file_location(function_name, plugin_path)
     module = importlib.util.module_from_spec(spec)
@@ -85,12 +86,12 @@ def run_function(function_name, arguments):
     function = getattr(module, "run")
     try:
         # Try to call the function
-        function_response = function(variables_list, **arguments)
-        print(function_response)
+        function_response = function(**arguments)
         return function_response
     except Exception as e:
         #If an error occurs, return an error instead
         function_error = str(e)
+        print()
         print(f"Function error: {function_error}")
         return f"{function_name} returned an error: {function_error}"
 
@@ -128,24 +129,20 @@ def get_msg(conversation_id, info):
         # Return an empty list
         return []
 
-# Define a function to clean the list of messages by conversation ID and message limit
 def clean_list(conversation_id, message_limit):
-    # Check if the conversation ID exists in the dictionary
     if conversation_id in messages_dict:
-        # Get the list of messages
         messages = messages_dict[conversation_id]
-        # Check if the total number of messages exceeds the limit
-        if len(messages) > message_limit:
-            # Calculate the number of messages to remove
-            num_removed = len(messages) - message_limit
-            messages = messages[-message_limit:]  # Keep only the most recent messages
-            print(f"Removed {num_removed} messages from context.")
-            messages_dict[conversation_id] = messages
+        cleaned_messages = []
+        for message in messages:
+            if message['role'] == 'function':
+                message['content'] = 'This function\'s response has been cleared to save on token usage'
+            cleaned_messages.append(message)
+        messages_dict[conversation_id] = cleaned_messages[-message_limit:]
 
 async def ai_reply(input, message, conversation_id, info):
     # Add the input arg to the list of messages and then clean the list (removes the oldest messages)
     add_msg(conversation_id, input)
-    clean_list(conversation_id, 7)
+    print(get_msg(conversation_id, info))
     # Define the payload which will be sent to the AI
     payload = {
       "model": LLM_MODEL,
@@ -188,20 +185,21 @@ async def ai_reply(input, message, conversation_id, info):
                 # Take the AI's response and send that through Discord
                 ai_response = response_dict["choices"][0]["message"]["content"]
                 add_msg(conversation_id, {"role": "assistant", "content": f"{ai_response}"})
-                await send_message(ai_response, message)
-                print()
-                print(ai_response)
                 # Print token usage
                 prompt_tokens = response_dict["usage"]["prompt_tokens"]
                 completion_tokens = response_dict["usage"]["completion_tokens"]
-                total_tokens = response_dict["usage"]["total_tokens"]
+                print()
+                print(bot.user.name + ' replied: ' + ai_response)
                 print(f"Prompt Tokens: {prompt_tokens}")
                 print(f"Completion Tokens: {completion_tokens}")
-                print(f"Total Tokens: {total_tokens}")
+                # Clear out old messages and function outputs
+                clean_list(conversation_id, 8)
+                await send_message(ai_response, message)
             elif finish_reason == "function_call":
                 # Take the function details and call it
                 func_name = response_dict["choices"][0]["message"]["function_call"]["name"]
                 func_args = response_dict["choices"][0]["message"]["function_call"]["arguments"]
+                print()
                 print(f"""Calling function `{func_name}` with the arguments:
                       {func_args}""")
                 # Send the functions response back to the AI for another response
@@ -224,22 +222,50 @@ async def ai_reply(input, message, conversation_id, info):
 
 ### DISCORD STUFF
 
-# Define a function which sends an animated typing message through Discord
 async def send_message(message, message_obj):
-    # Define the size of the messages individual chunks
+    # Define the size of the message's individual chunks
     size = 48
-    # Send the first size characters of the message
-    msg = await message_obj.channel.send(message[:size])
-    # Index of the next character
-    i = size
-    # Loop until the end of the string plus size
-    while i < len(message) + size:
-        # Edit the message with the current substring
-        await msg.edit(content=message[:i])
-        # Increment the index by size
-        i += size
-        # Wait for a short time before repeating for the next chunk
-        await asyncio.sleep(0.2)
+    img_url = extract_image_url(message)
+    if img_url:
+        message_stripped = message.replace(img_url, "[IMAGE]")
+    # Check if the message contains a valid image URL
+    if has_valid_image_url(message):
+        url = img_url
+        response = requests.get(url)
+
+        open('tempimage.png', 'wb').write(response.content)
+        # Send the message with the attached image:
+        imgfile = discord.File("tempimage.png")
+        msg = await message_obj.channel.send(message_stripped[:size], file=imgfile)
+        os.remove('tempimage.png')
+        i = size
+        while i < len(message) + size:
+            await msg.edit(content=message_stripped[:i])
+            i += size
+            await asyncio.sleep(0.2)
+    else:
+        # Send the message as normal
+        msg = await message_obj.channel.send(message[:size])
+        i = size
+        while i < len(message) + size:
+            await msg.edit(content=message[:i])
+            i += size
+            await asyncio.sleep(0.2)
+
+def extract_image_url(message):
+    # Use regular expressions to extract the image URL
+    pattern = r"(http[s]?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp))"
+    matches = re.findall(pattern, message)
+    if matches:
+        return matches[0]
+    else:
+        return None
+    
+def has_valid_image_url(message):
+    # Use regular expressions to check for a valid image URL
+    pattern = r"(http[s]?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp))"
+    matches = re.findall(pattern, message)
+    return len(matches) > 0
 
 # Define  a function which creates a "Bot is typing..." indicator in the Discord channel
 async def TriggerTyping(secs, message):
@@ -254,8 +280,14 @@ async def on_message(message):
     if f'<@{bot.user.id}>' in message.content:
         # If the message received contains a ping to the bot (@Bot), strip the ping from the message before continuing
         content = message.content.replace(f'<@{bot.user.id}>', '').lstrip()
-        # Append the users name to the start of the message
-        content = f"{message.author.name}: {content}"
+        # Set a nickname
+        nickname = run_function("user_nickname", {'action': 'get_nickname', 'user_id': f'{message.author.id}', 'server_id': f'{message.guild.id}'})
+        if nickname != f"No nickname found for user {message.author.id} in server {message.guild.id}":
+            # If a nickname is found, append it to the message
+            content = f"[ID: {message.author.id}, Name: {nickname}]: {content}"
+        else:
+            # If a nickname is not found, leave the message as is
+            content = f"[ID: {message.author.id}, Name: No name is found, ask for the users name by pinging them like \"<@{message.author.id}>\" and set it as their nickname]: {content}"
         # Trigger the typing indicator
         await TriggerTyping(1, message)
         # Get the channel ID of the message which will become the Conversation ID
@@ -264,13 +296,22 @@ async def on_message(message):
         # Print the users message
         print()
         print(f'{content}')
+        # Grab all the custom emojis from the current server
+        emojis = message.guild.emojis
+        emoji_list = []
+        for emoji in emojis:
+            # Append each emoji found to a list
+            emoji_list.append(f"<:{emoji.name}:{emoji.id}>")
         # Define some extra info which will be sent to the AI for additional context
         info = f"""
+
+You have access to the following server emojis:
+{emoji_list}
 
 Current message context:
 Message ID: "{message.id}"
 Message Author: "{message.author.name}"
-Message Author's Traits: {run_function("user_traits", {"action": "get_traits", "username": message.author.name})}
+Message Author's Traits: {run_function("user_traits", {"action": "get_traits", "user_id": message.author.name})}
 Message Author User ID: "{message.author.id}"
 Message origins: From channel "{message.channel.name}" in server "{message.guild.name}"
 Channel ID: "{message.channel.id}"

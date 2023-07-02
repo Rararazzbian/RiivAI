@@ -1,0 +1,19 @@
+{
+  "name": "internet",
+  "description": "Returns the text from a URL link",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "name": "action",
+        "type": "string",
+        "description": "The action you wish to perform, either google_search, read_webpage, or minecraft_server_status"
+      },
+	  "prompt": {
+        "name": "prompt",
+        "type": "string",
+        "description": "The actions corresponding prompt (query, url, or ip) accordingly."
+      }
+    }
+  }
+}

@@ -1,8 +1,6 @@
 # RiivAI
 A Discord bot that uses OpenAI's GPT to generate responses and call external functions.
 
-# THIS BOT IS UNFINISHED AND WILL NOT FUNCTION CORRECTLY, DO NOT TRY TO RUN THIS.
-
 The bot connects to Discord using the `discord.py` library and listens for messages that mention it. When a message is received, the bot sends the message along with some extra information (such as message ID, channel ID, server ID, etc.) to the language model endpoint using the `requests` library.
 
 The language model endpoint receives the message and the list of functions available in the plugins folder. It then generates a response using GPT and returns it as a JSON object. The bot parses the response and checks the finish reason. It will then either send the AI's message through Discord as a response, or call a function and repeat until it responds with an answer to the users original message.

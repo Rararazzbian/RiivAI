@@ -11,29 +11,44 @@ The bot also keeps track of the messages by conversation ID and cleans them peri
 
 ## How to install
 
-To install and run this bot, you need to have Python 3.11 or higher installed on your system. You also need to have an OpenAI API key and a Discord bot token.
+This bot has only been tested on Python 3.11.4, I cannot guarantee compatibility with other versions.
 
-To install the required libraries, run:
-
+To install the required libraries, CD into the bot's directory using your terminal and run:
 ```bash
 pip install -r requirements.txt
 ```
 
 To set up the environment variables, modify the `example.env` file in the root folder of the project and modify the following lines to include your own:
-
 ```bash
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-DISCORD_TOKEN=ODxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OPENAI_API_KEY=<YOUR OPENAI KEY>
+DISCORD_TOKEN=<YOUR DISCORD BOT TOKEN>
 LLM_ENDPOINT=https://api.openai.com/v1/chat/completions
-LLM_MODEL=MODEL NAME (aka gpt-3.5-turbo-0613)
-GOOGLESEARCH_API_KEY=YOUR GOOGLE SEARCH API KEY
-GOOGLESEARCH_CSE_ID=YOUR GOOGLE SEARCH CSI ID
+LLM_MODEL=<gpt-3.5-turbo-0613
+GOOGLESEARCH_API_KEY=<YOUR GOOGLE SEARCH API KEY>
+GOOGLESEARCH_CSE_ID=<YOUR GOOGLE SEARCH CSI ID>
+YOUTUBE_API_KEY=<YOUTUBE_DATA_API_KEY>
+FURAFFINITY_A_COOKIE=<FURAFFINITY_A_COOKIE>
+FURAFFINITY_B_COOKIE=<FURAFFINITY_B_COOKIE>
 ```
+The LLM endpoint should stay the same unless you are using an alternative AI LLM with an ***OpenAI compatible API***.
+Same applies for the LLM Model, unless you are wanting to upgrade this to GPT-4, this should stay as a ***Function Compatible*** LLM Model name.
 
-Replace the values with your own API key, bot token, language model endpoint, model name, etc.
+Go to the OpenAI Platform website at platform.openai.com and sign in with an OpenAI account.
+Click your profile icon at the top-right corner of the page and select “View API Keys.”
+Click “Create New Secret Key” to generate a new API key, you can paste this into the `example.env` file replacing `<YOUR OPENAI KEY>`.
+A ***Paid*** OpenAI account is required to avoid rate limit errors.
+Click “Billing” and select “Set up paid account.”
+Enter your card information and such.
 
+Go to the Discord Developer Portal at discordapp.com/developers/applications and log in to your account.
+Click “New Application” to create a new bot token.
+Give a name to the bot and click “Create.”
+Click on the “Bot” tab and use the “Click to Reveal Token” or “Copy” button under your bot username, paste this into the `example.env` file replacing the `<YOUR DISCORD BOT TOKEN>`.
+
+The rest of the variables should be self explanitory and easy tutorials are not hard to find.
+
+## Setting up the System Prompt for your bot
 To setup the system prompt, create an `initial_prompt.txt` file in the root folder of the project and fill it with your initial prompt message, this will setup how your AI will behave, for example you could write:
-
 ```
 You are RiivAI, an AI companion.
 Lore:
@@ -45,14 +60,43 @@ To run the bot, run the Start.bat file included in the folder, the bot should so
 ## How to create a plugin for SoserAI
 To create a new plugin, follow these steps:
 
-1. Create a JSON file with the same name as your plugin (e.g. `hello_world.json`) and add its metadata in it. The JSON file should have the following fields:
+Create a new folder in the plugins folder with the name of your plugin (e.g. `google_search`).
+Make a Python file with the same name as your plugin (e.g. `google_search.py`) and define your function in it. The function should accept arguments in the order of how they were listed in your plugins corresponding JSON file, and return a string output. Here's the included google_search plugin for example:
+```python
+# Import the required modules
+from googlesearch import search
+import googleapiclient.discovery
+from dotenv import load_dotenv
+import os
 
-- `name`: The name of your plugin (e.g. `"google_search"`).
-- `description`: A short description of what your plugin is for (e.g. `"Search the internet for a given query"`).
+# Define the run function that takes a query and returns a string with the results
+def run(prompt):
+    GOOGLESEARCH_API_KEY = os.getenv('GOOGLESEARCH_API_KEY')
+    GOOGLESEARCH_CSE_ID = os.getenv('GOOGLESEARCH_CSE_ID')
+    # Create a service object using the API key and the CSE ID
+    service = googleapiclient.discovery.build("customsearch", "v1", developerKey=GOOGLESEARCH_API_KEY)
+    # Execute the search request and get the response
+    response = service.cse().list(q=prompt, cx=GOOGLESEARCH_CSE_ID, num=5).execute()
+    # Extract the list of items from the response
+    items = response.get("items", [])
+    # Initialize an empty string to store the output
+    output = ""
+    # Add the number of results found to the output
+    output += f"Found {len(items)} results for {prompt}\n"
+    # Loop through the items and add their titles and URLs to the output
+    for item in items:
+        output += item["title"] + "\n"
+        output += item["link"] + "\n\n"
+    # Return the output string
+    return output
+```
+
+Create a JSON file with the same name as your plugin (e.g. `hello_world.json`) and add its metadata in it. The JSON file should have the following fields:
+- `name`: The name of your plugin (e.g. `google_search`).
+- `description`: A short description of what your plugin is for (e.g. `Search the internet for a given query`).
 - `parameters`: A list of parameters that your plugin accepts, each with a name, type and description (e.g. `[{"name": "prompt", "type": "string", "description": "Your search query"}]`).
 
 For example:
-
 ```json
 {
   "name": "google_search",
@@ -72,36 +116,8 @@ For example:
 
 2. Save your files and restart the bot. Your plugin should be available for the bot to use.
 
-3. Create a new folder in the plugins folder with the name of your plugin (e.g. `google_search`).
-4. Create a Python file with the same name as your plugin (e.g. `google_search.py`) and define your function in it. The function should accept arguments in the order of how they were listed in your plugins corresponding JSON file, and return a string output. Here's the included google_search plugin for example:
-
-```python
-from googlesearch import search
-import googleapiclient.discovery
-import os
-from dotenv import load_dotenv
-
-# Define the run function that takes a query and returns a string with the results
-def run(prompt):
-    GOOGLESEARCH_API_KEY = dot.getenv('GOOGLESEARCH_API_KEY')
-    GOOGLESEARCH_CSE_ID = dot.getenv('GOOGLESEARCH_CSI_ID')
-    try:
-        service = googleapiclient.discovery.build("customsearch", "v1", developerKey=GOOGLESEARCH_API_KEY)
-        response = service.cse().list(q=prompt, cx=GOOGLESEARCH_CSE_ID, num=5).execute()
-        items = response.get("items", [])
-        output = ""
-        output += f"Found {len(items)} results for {prompt}\n"
-        for item in items:
-            output += item["title"] + "\n"
-            output += item["link"] + "\n\n"
-        return output
-    except Exception as e:
-        return str(e)
-```
-
 To call your plugin from the bot, you can simply ask the bot to call the function.
 The bot will parse your message and send it to the language model endpoint, which will return a function call request with the name and arguments of your plugin. The bot will then import and run your plugin and send its output back to the language model endpoint for another response. For example, you could write:
-
 `Can you search for the latest Discord API Docs and provide a link?`
 
 The bot will try to find a plugin that can perform this task (in this case being google_search) and send a function call request with the appropriate name and arguments. In this case, it will likely use the included google_search plugin and respond with:

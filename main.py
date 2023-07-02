@@ -142,7 +142,6 @@ def clean_list(conversation_id, message_limit):
 async def ai_reply(input, message, conversation_id, info):
     # Add the input arg to the list of messages and then clean the list (removes the oldest messages)
     add_msg(conversation_id, input)
-    print(get_msg(conversation_id, info))
     # Define the payload which will be sent to the AI
     payload = {
       "model": LLM_MODEL,
@@ -218,9 +217,6 @@ async def ai_reply(input, message, conversation_id, info):
         error_msg = response_dict["error"]["message"]
         await send_message(f"***{bot.user.name} has encountered an error!***", message)
         print(error_msg)
-
-
-### DISCORD STUFF
 
 async def send_message(message, message_obj):
     # Define the size of the message's individual chunks

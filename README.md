@@ -3,6 +3,17 @@ A Discord bot that uses OpenAI's GPT to generate responses and call external fun
 
 The bot connects to Discord using the `discord.py` library and listens for messages that mention it. When a message is received, the bot sends the message along with some extra information (such as message ID, channel ID, server ID, etc.) to the language model endpoint using the `requests` library.
 
+## Features
+-Function calling to external modules 📢
+-Long Term Memory for User Traits and Nicknames 🧠
+-(Limited) Internet Access 🔍
+With refined access to the following websites:
+FurAffinity
+YouTube
+Reddit (Can only read post titles)
+
+Twitter capabilities are not possible without their paid API, if you ask the AI to read a twitter page, it will not be able to as Twitter will only respond with an error.
+
 The language model endpoint receives the message and the list of functions available in the plugins folder. It then generates a response using GPT and returns it as a JSON object. The bot parses the response and checks the finish reason. It will then either send the AI's message through Discord as a response, or call a function and repeat until it responds with an answer to the users original message.
 
 The bot also keeps track of the messages by conversation ID and cleans them periodically to avoid exceeding the token limit.

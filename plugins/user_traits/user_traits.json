@@ -1,23 +1,23 @@
 {
   "name": "user_traits",
-  "description": "Manage user traits with a given action and user id, use this to access information you may have about anyone, this is only for specific users, not servers.",
+  "description": "Manage user traits, this is only for specific users, not servers.",
   "parameters": {
     "type": "object",
     "properties": {
       "action": {
         "name": "action",
         "type": "string",
-        "description": "The action to perform (get_traits, add_traits, remove_trait, or reset_traits (will reset the entire list of traits for a given user))"
+        "description": "The action to perform (get_traits, add_trait, remove_trait, reset_traits))"
       },
-      "username": {
+      "user_id": {
         "name": "user_id",
         "type": "string",
-        "description": "The user id for which to manage traits"
+        "description": "The user ID"
       },
       "trait": {
         "name": "trait",
         "type": "string",
-        "description": "The sentence to add, this should be as short as possible (required for add_traits action), or the trait ID if you are removing a trait"
+        "description": "Short sentence trait"
       }
     }
   }

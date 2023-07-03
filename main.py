@@ -135,7 +135,7 @@ def clean_list(conversation_id, message_limit):
         cleaned_messages = []
         for message in messages:
             if message['role'] == 'function':
-                message['content'] = 'This function\'s response has been cleared to save on token usage'
+                message['content'] = 'This response has been removed to save tokens'
             cleaned_messages.append(message)
         messages_dict[conversation_id] = cleaned_messages[-message_limit:]
 
@@ -192,7 +192,7 @@ async def ai_reply(input, message, conversation_id, info):
                 print(f"Prompt Tokens: {prompt_tokens}")
                 print(f"Completion Tokens: {completion_tokens}")
                 # Clear out old messages and function outputs
-                clean_list(conversation_id, 8)
+                clean_list(conversation_id, 7)
                 await send_message(ai_response, message)
             elif finish_reason == "function_call":
                 # Take the function details and call it
@@ -219,49 +219,8 @@ async def ai_reply(input, message, conversation_id, info):
         print(error_msg)
 
 async def send_message(message, message_obj):
-    # Define the size of the message's individual chunks
-    size = 48
-    img_url = extract_image_url(message)
-    if img_url:
-        message_stripped = message.replace(img_url, "[IMAGE]")
-    # Check if the message contains a valid image URL
-    if has_valid_image_url(message):
-        url = img_url
-        response = requests.get(url)
-
-        open('tempimage.png', 'wb').write(response.content)
-        # Send the message with the attached image:
-        imgfile = discord.File("tempimage.png")
-        msg = await message_obj.channel.send(message_stripped[:size], file=imgfile)
-        os.remove('tempimage.png')
-        i = size
-        while i < len(message) + size:
-            await msg.edit(content=message_stripped[:i])
-            i += size
-            await asyncio.sleep(0.2)
-    else:
-        # Send the message as normal
-        msg = await message_obj.channel.send(message[:size])
-        i = size
-        while i < len(message) + size:
-            await msg.edit(content=message[:i])
-            i += size
-            await asyncio.sleep(0.2)
-
-def extract_image_url(message):
-    # Use regular expressions to extract the image URL
-    pattern = r"(http[s]?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp))"
-    matches = re.findall(pattern, message)
-    if matches:
-        return matches[0]
-    else:
-        return None
-    
-def has_valid_image_url(message):
-    # Use regular expressions to check for a valid image URL
-    pattern = r"(http[s]?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp))"
-    matches = re.findall(pattern, message)
-    return len(matches) > 0
+    # Send the message
+    await message_obj.channel.send(message)
 
 # Define  a function which creates a "Bot is typing..." indicator in the Discord channel
 async def TriggerTyping(secs, message):
@@ -279,11 +238,11 @@ async def on_message(message):
         # Set a nickname
         nickname = run_function("user_nickname", {'action': 'get_nickname', 'user_id': f'{message.author.id}', 'server_id': f'{message.guild.id}'})
         if nickname != f"No nickname found for user {message.author.id} in server {message.guild.id}":
-            # If a nickname is found, append it to the message
+            # If a nickname is found, replace the users display name with the nickname
             content = f"[ID: {message.author.id}, Name: {nickname}]: {content}"
         else:
             # If a nickname is not found, leave the message as is
-            content = f"[ID: {message.author.id}, Name: No name is found, ask for the users name by pinging them like \"<@{message.author.id}>\" and set it as their nickname]: {content}"
+            content = f"[Current Time: {datetime.now()}, ID: {message.author.id}, Name: {message.author.display_name}]: {content}"
         # Trigger the typing indicator
         await TriggerTyping(1, message)
         # Get the channel ID of the message which will become the Conversation ID

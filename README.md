@@ -37,15 +37,19 @@ pip install -r requirements.txt
 
 To set up the environment variables, modify the `example.env` file in the root folder of the project and modify the following lines to include your own:
 ```bash
-OPENAI_API_KEY=<YOUR OPENAI KEY>
-DISCORD_TOKEN=<YOUR DISCORD BOT TOKEN>
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DISCORD_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 LLM_ENDPOINT=https://api.openai.com/v1/chat/completions
+LOCAL_LLM_ENDPOINT=<LOCAL_CHAT_COMPLETIONS_ENDPOINT>
 LLM_MODEL=gpt-3.5-turbo-0613
-GOOGLESEARCH_API_KEY=<YOUR GOOGLE SEARCH API KEY>
-GOOGLESEARCH_CSE_ID=<YOUR GOOGLE SEARCH CSI ID>
-YOUTUBE_API_KEY=<YOUTUBE_DATA_API_KEY>
-FURAFFINITY_A_COOKIE=<FURAFFINITY_A_COOKIE>
-FURAFFINITY_B_COOKIE=<FURAFFINITY_B_COOKIE>
+LOCAL_LLM_MODEL=<LOCAL_MODEL_NAME>
+GOOGLESEARCH_API_KEY=<API_KEY>
+GOOGLESEARCH_CSE_ID=<CSI_ID>
+YOUTUBE_API_KEY=<YT_API_KEY>
+FURAFFINITY_A_COOKIE=<FA_A_COOKIE>
+FURAFFINITY_B_COOKIE=<FA_B_COOKIE>
+OMDB_API_KEY=<OMDB_API_KEY>
+SD_API_URL=<SD_API_URL>
 ```
 The LLM endpoint should stay the same unless you are using an alternative AI LLM with an ***OpenAI compatible API***.
 Same applies for the LLM Model, unless you are wanting to upgrade this to GPT-4, this should stay as a ***Function Compatible*** LLM Model name.

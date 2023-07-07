@@ -30,6 +30,11 @@ The bot also keeps track of the messages by conversation ID and cleans them peri
 ## How to install
 
 This bot has only been tested on Python 3.11.4, I cannot guarantee compatibility with other versions.
+These steps are primarily for windows, I have also run this AI on a Raspberry Pi running a Debian Server OS, but the setup I've only done through Windows.
+Clone this git repository using the following command:
+```bash
+git clone https://github.com/Rararazzbian/RiivAI.git
+```
 
 To install the required libraries, CD into the bot's directory using your terminal and run:
 ```bash

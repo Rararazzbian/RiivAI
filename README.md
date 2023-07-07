@@ -36,7 +36,7 @@ Clone this git repository using the following command:
 git clone https://github.com/Rararazzbian/RiivAI.git
 ```
 
-To install the required libraries, CD into the bot's directory using your terminal and run:
+To install the required libraries, CD into the bot's directory with `cd RiivAI` using your terminal and run:
 ```bash
 pip install -r requirements.txt
 ```

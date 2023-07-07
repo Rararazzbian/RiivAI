@@ -93,7 +93,6 @@ def run_function(function_name, arguments):
     try:
         # Try to call the function
         function_response = function(**arguments)
-        print(function_response)
         return function_response
     except Exception as e:
         #If an error occurs, return an error instead
@@ -324,33 +323,20 @@ async def on_message(message):
                 # Define some extra info which will be sent to the AI for additional context
                 info = f"""
 
-You exist within a Discord conversation, here are some quick formatting tips:
-You can send image files by writing the image URL, this will automatically be parsed by discord as an image file
-**Bold text**: Surround with two asterisks
-*Italic text*: Surround with one asterisk
-__Underlined text__: Surround with two underscores
-~~Strikethrough text~~: Surround with two tildes
-`Code highlighting`: Surround with backticks or 
-```triple backticks``` for a code block
-||Spoilers||: Surround with vertical bars
-# Headers: # and space at start of line for headers e.g. "# Large Text" creates a large text header.
+        Your responses are limited to a maximum of 1500 characters.
 
-Use as needed.
+        You have access to the following server emojis:
+        {emoji_list}
 
-Your responses are limited to a maximum of 1500 characters.
-
-You have access to the following server emojis:
-{emoji_list}
-
-Current message context:
-Message ID: "{message.id}"
-Message Author: "{message.author.name}"
-Message Author's Traits: {run_function("user_traits", {"action": "get_traits", "user_id": message.author.name})}
-Message Author User ID: "{message.author.id}"
-Message origins: From channel "{message.channel.name}" in server "{message.guild.name}"
-Channel ID: "{message.channel.id}"
-Server ID: "{message.guild.id}"
-"""
+        Current message context:
+        Message ID: "{message.id}"
+        Message Author: "{message.author.name}"
+        Message Author's Traits: {run_function("user_traits", {"action": "get_traits", "user_id": message.author.name})}
+        Message Author User ID: "{message.author.id}"
+        Message origins: From channel "{message.channel.name}" in server "{message.guild.name}"
+        Channel ID: "{message.channel.id}"
+        Server ID: "{message.guild.id}"
+        """
                 # Send the users message to the AI, alongside the conversation ID and info
                 await ai_reply(({"role": "user", "content": content}), conversation_id, info, message)
 

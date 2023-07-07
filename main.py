@@ -7,11 +7,14 @@ import importlib.util
 import os
 import discord
 from discord.ext import commands
+from discord.ext import tasks
+from discord import File
 import asyncio
 from dotenv import load_dotenv
 import re
 import urllib.request
 import tempfile
+import random
 
 # Grab the environment variables for the bot
 load_dotenv()
@@ -19,22 +22,6 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 LLM_ENDPOINT = os.getenv('LLM_ENDPOINT')
 LLM_MODEL = os.getenv('LLM_MODEL')
-GOOGLESEARCH_API_KEY = os.getenv('GOOGLESEARCH_API_KEY')
-GOOGLESEARCH_CSE_ID = os.getenv('GOOGLESEARCH_CSE_ID')
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
-FURAFFINITY_A_COOKIE = os.getenv('FURAFFINITY_A_COOKIE')
-FURAFFINITY_B_COOKIE = os.getenv('FURAFFINITY_B_COOKIE')
-
-
-variables_list = f"""OPENAI_API_KEY = {OPENAI_API_KEY}
-DISCORD_TOKEN = {DISCORD_TOKEN}
-LLM_ENDPOINT = {LLM_ENDPOINT}
-LLM MODEL = {LLM_MODEL}
-GOOGLESEARCH_API_KEY = {GOOGLESEARCH_API_KEY}
-GOOGLESEARCH_CSE_ID = {GOOGLESEARCH_CSE_ID}
-YOUTUBE_API_KEY = {YOUTUBE_API_KEY}
-FURAFFINITY_A_COOKIE = {FURAFFINITY_A_COOKIE}
-FURAFFINITY_B_COOKIE = {FURAFFINITY_B_COOKIE}"""
 
 # Define the Discord intents
 intents = discord.Intents.default()
@@ -42,12 +29,31 @@ intents.messages = True
 intents.message_content = True
 
 # Define the bot
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='.', intents=intents)
 
 # Print when the Discord bot has connected
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
+    print(f'{bot.user.name} is alive!')
+    bot.loop.create_task(check_channels())
+
+@bot.command()
+async def img(message_obj, *, message):
+    if message_obj.message.attachments:
+        print(message_obj.message.attachments[0].url)
+        run_function("generate_image", {"prompt": message, "img_input": message_obj.message.attachments[0].url})
+        with open('output.png', 'rb') as f:
+            file = File(f)
+            # Attach the local file to the message and send it through Discord
+            await message_obj.channel.send(content=f'Generated image! "{message}"', file=file)
+        os.remove('output.png')
+    else:
+        run_function("generate_image", {"prompt": message})
+        with open('output.png', 'rb') as f:
+            file = File(f)
+            # Attach the local file to the message and send it through Discord
+            await message_obj.channel.send(content=f'Generated image! "{message}"', file=file)
+        os.remove('output.png')
 
 # Define an empty functions dictionary
 functions_list = []
@@ -87,6 +93,7 @@ def run_function(function_name, arguments):
     try:
         # Try to call the function
         function_response = function(**arguments)
+        print(function_response)
         return function_response
     except Exception as e:
         #If an error occurs, return an error instead
@@ -139,7 +146,7 @@ def clean_list(conversation_id, message_limit):
             cleaned_messages.append(message)
         messages_dict[conversation_id] = cleaned_messages[-message_limit:]
 
-async def ai_reply(input, message, conversation_id, info):
+async def ai_reply(input, conversation_id, info, message=None):
     # Add the input arg to the list of messages and then clean the list (removes the oldest messages)
     add_msg(conversation_id, input)
     # Define the payload which will be sent to the AI
@@ -165,15 +172,24 @@ async def ai_reply(input, message, conversation_id, info):
                 # Continue with further actions
                 pass
             else:
-                # Sends an error in case of an exception
+                if message == None:
+                    return f"It seems that {bot.user.name} has encountered an error! Check the output for details."
+                else:
+                    # Sends an error in case of an exception
+                    await send_message(f"It seems that {bot.user.name} has encountered an error! Check the output for details.", message)
+                    print(response.text)
+        else:
+            if message == None:
+                    return f"It seems that {bot.user.name} has encountered an error! Check the output for details."
+            else:
                 await send_message(f"It seems that {bot.user.name} has encountered an error! Check the output for details.", message)
                 print(response.text)
+    except KeyError:
+        if message == None:
+            return f"It seems that {bot.user.name} has encountered an error! Check the output for details."
         else:
             await send_message(f"It seems that {bot.user.name} has encountered an error! Check the output for details.", message)
             print(response.text)
-    except KeyError:
-        await send_message(f"It seems that {bot.user.name} has encountered an error! Check the output for details.", message)
-        print(response.text)
 
     try:
         choice = response_dict["choices"]
@@ -193,7 +209,10 @@ async def ai_reply(input, message, conversation_id, info):
                 print(f"Completion Tokens: {completion_tokens}")
                 # Clear out old messages and function outputs
                 clean_list(conversation_id, 7)
-                await send_message(ai_response, message)
+                if message == None:
+                    return ai_response
+                else:
+                    await send_message(ai_response, message)
             elif finish_reason == "function_call":
                 # Take the function details and call it
                 func_name = response_dict["choices"][0]["message"]["function_call"]["name"]
@@ -205,22 +224,59 @@ async def ai_reply(input, message, conversation_id, info):
                 parsed_argument = json.loads(func_args)
                 function_response = run_function(func_name,parsed_argument)
                 add_msg(conversation_id, {"role": "assistant", "content": "", "function_call": {"name": f"{func_name}", "arguments": f"{func_args}"}})
-                await ai_reply({"role": "function", "name": f"{func_name}", "content": f"{function_response}"}, message, conversation_id, info)
+                await ai_reply({"role": "function", "name": f"{func_name}", "content": f"{function_response}"}, conversation_id, info, message)
             else:
                 # Handle other cases
                 print("Unexpected finish reason!")
         else:
             error_msg = response_dict["error"]["message"]
-            await send_message(f"***{bot.user.name} has encountered an error!***", message)
+            if message == None:
+                return f"***{bot.user.name} has encountered an error!***"
+            else:
+                await send_message(f"***{bot.user.name} has encountered an error!***", message)
             print(error_msg)
     except KeyError:
         error_msg = response_dict["error"]["message"]
-        await send_message(f"***{bot.user.name} has encountered an error!***", message)
+        if message == None:
+            return f"***{bot.user.name} has encountered an error!***"
+        else:
+            await send_message(f"***{bot.user.name} has encountered an error!***", message)
         print(error_msg)
 
 async def send_message(message, message_obj):
-    # Send the message
-    await message_obj.channel.send(message)
+    # Check if message contains an image url
+    image_url_pattern = re.compile(r'(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)')
+    # Search for an image url in the message
+    match = image_url_pattern.search(message)
+    if match:
+        # Check if the url starts with http://localstorage/
+        if match.group().startswith('http://localstorage/'):
+            # Replace the url with an empty string and append the local file path to it
+            local_file_path = match.group().replace('http://localstorage/', '')
+            local_file_path = os.path.join(os.getcwd(), local_file_path)
+            message = image_url_pattern.sub('***Image***', message)
+            # Open the local file as f
+            with open(local_file_path, 'rb') as f:
+                file = File(f)
+                # Attach the local file to the message and send it through Discord
+                await message_obj.channel.send(content=message, file=file)
+            os.remove(local_file_path)
+        else:
+            # Download the image from the url and save it to a file
+            response = requests.get(match.group())
+            with open('image.jpg', 'wb') as f:
+                f.write(response.content)
+            # Strip the url from the message
+            message = image_url_pattern.sub('***Image***', message)
+            # Attach the downloaded image to the message and send it through Discord
+            with open('image.jpg', 'rb') as f:
+                file = File(f)
+                await message_obj.channel.send(content=message, file=file)
+            # Delete the downloaded image
+            os.remove('image.jpg')
+    else:
+        # Send the message through Discord without any modifications
+        await message_obj.channel.send(message)
 
 # Define  a function which creates a "Bot is typing..." indicator in the Discord channel
 async def TriggerTyping(secs, message):
@@ -232,33 +288,56 @@ async def on_message(message):
     if message.author == bot.user:
         # If the message came from the bot, ignore it
         return
-    if f'<@{bot.user.id}>' in message.content:
-        # If the message received contains a ping to the bot (@Bot), strip the ping from the message before continuing
-        content = message.content.replace(f'<@{bot.user.id}>', '').lstrip()
-        # Set a nickname
-        nickname = run_function("user_nickname", {'action': 'get_nickname', 'user_id': f'{message.author.id}', 'server_id': f'{message.guild.id}'})
-        if nickname != f"No nickname found for user {message.author.id} in server {message.guild.id}":
-            # If a nickname is found, replace the users display name with the nickname
-            content = f"[ID: {message.author.id}, Name: {nickname}]: {content}"
+    else:
+        if message.content.startswith(bot.command_prefix):
+            await bot.process_commands(message)
         else:
-            # If a nickname is not found, leave the message as is
-            content = f"[Current Time: {datetime.now()}, ID: {message.author.id}, Name: {message.author.display_name}]: {content}"
-        # Trigger the typing indicator
-        await TriggerTyping(1, message)
-        # Get the channel ID of the message which will become the Conversation ID
-        channel = message.channel.id
-        conversation_id = message.channel.id
-        # Print the users message
-        print()
-        print(f'{content}')
-        # Grab all the custom emojis from the current server
-        emojis = message.guild.emojis
-        emoji_list = []
-        for emoji in emojis:
-            # Append each emoji found to a list
-            emoji_list.append(f"<:{emoji.name}:{emoji.id}>")
-        # Define some extra info which will be sent to the AI for additional context
-        info = f"""
+            if f'<@{bot.user.id}>' in message.content:
+                # If the message received contains a ping to the bot (@Bot), strip the ping from the message before continuing
+                content = message.content.replace(f'<@{bot.user.id}>', '').lstrip()
+                # Set a nickname
+                nickname = run_function("user_nickname", {'action': 'get_nickname', 'user_id': f'{message.author.id}', 'server_id': f'{message.guild.id}'})
+                if nickname != f"No nickname found for user {message.author.id} in server {message.guild.id}":
+                    # If a nickname is found, replace the users display name with the nickname
+                    content = f"[ID: {message.author.id}, Name: {nickname}]: {content}"
+                else:
+                    # If a nickname is not found, leave the message as is
+                    content = f"[Current Time: {datetime.now()}, ID: {message.author.id}, Name: {message.author.display_name}]: {content}"
+                if len(message.attachments) > 0:
+                    for file in message.attachments:
+                        content = f"""{content}
+        This message has a file attached with the URL: {file.url}"""
+                # Trigger the typing indicator
+                await TriggerTyping(1, message)
+                # Get the channel ID of the message which will become the Conversation ID
+                channel = message.channel.id
+                conversation_id = message.channel.id
+                # Print the users message
+                print()
+                print(f'{content}')
+                # Grab all the custom emojis from the current server
+                emojis = message.guild.emojis
+                emoji_list = []
+                for emoji in emojis:
+                    # Append each emoji found to a list
+                    emoji_list.append(f"<:{emoji.name}:{emoji.id}>")
+                # Define some extra info which will be sent to the AI for additional context
+                info = f"""
+
+You exist within a Discord conversation, here are some quick formatting tips:
+You can send image files by writing the image URL, this will automatically be parsed by discord as an image file
+**Bold text**: Surround with two asterisks
+*Italic text*: Surround with one asterisk
+__Underlined text__: Surround with two underscores
+~~Strikethrough text~~: Surround with two tildes
+`Code highlighting`: Surround with backticks or 
+```triple backticks``` for a code block
+||Spoilers||: Surround with vertical bars
+# Headers: # and space at start of line for headers e.g. "# Large Text" creates a large text header.
+
+Use as needed.
+
+Your responses are limited to a maximum of 1500 characters.
 
 You have access to the following server emojis:
 {emoji_list}
@@ -272,8 +351,27 @@ Message origins: From channel "{message.channel.name}" in server "{message.guild
 Channel ID: "{message.channel.id}"
 Server ID: "{message.guild.id}"
 """
-        # Send the users message to the AI, alongside the conversation ID and info
-        await ai_reply(({"role": "user", "content": content}), message, conversation_id, info)
+                # Send the users message to the AI, alongside the conversation ID and info
+                await ai_reply(({"role": "user", "content": content}), conversation_id, info, message)
+
+async def check_channels():
+    while True:
+        wait_time = 15
+        await bot.wait_until_ready()
+        while not bot.is_closed():
+            channels_to_check = [1072581164868583636]
+            for channel_id in channels_to_check:
+                channel = bot.get_channel(channel_id)
+                async for message in channel.history(limit=1):
+                    created_at_naive = message.created_at.replace(tzinfo=None)
+                    time_difference = datetime.utcnow() - created_at_naive
+                    if time_difference.seconds > wait_time * 60:
+                        print('Inactivity detected!')
+                        if random.random() < 0.05:
+                            await channel.send(await ai_reply(({"role": "user", "content": f'[Current Time: {datetime.now()}]: Inactivity detected, try to spark a conversation about something vore related.'}), channel_id, '.', None))
+                        else:
+                            print(f'{bot.user.name} chose not to speak.')
+            await asyncio.sleep(wait_time * 60)
 
 # Run the Discord Bot
 bot.run(DISCORD_TOKEN)

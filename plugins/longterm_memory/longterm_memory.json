@@ -1,0 +1,24 @@
+{
+  "name": "longterm_memory",
+  "description": "Manage your long term memory for each server, you can find a list your long term memories for the current server in the initial prompt.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "name": "action",
+        "type": "string",
+        "description": "The action to perform (add_memory, remove_memory, reset_memories))"
+      },
+      "server_id": {
+        "name": "server_id",
+        "type": "string",
+        "description": "The Server ID (found in your initial system message)"
+      },
+      "memory": {
+        "name": "memory",
+        "type": "string",
+        "description": "Short sentence memory, or memory ID to remove"
+      }
+    }
+  }
+}

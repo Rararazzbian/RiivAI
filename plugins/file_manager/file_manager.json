@@ -1,0 +1,24 @@
+{
+  "name": "file_manager",
+  "description": "Manage files and directories locally.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "name": "action",
+        "type": "string",
+        "description": "Action to perform, actions: read_file, write_file, create_directory, delete_directory, delete_file, list_files"
+      },
+	  "directory": {
+        "name": "directory",
+        "type": "string",
+        "description": "The folder directory or filename path in a python\\readable\\format"
+      },
+	  "contents": {
+        "name": "contents",
+        "type": "string",
+        "description": "Contents of the file you wish to write"
+      }
+    }
+  }
+}

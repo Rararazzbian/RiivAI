@@ -1,0 +1,19 @@
+{
+  "name": "read_webpage",
+  "description": "Returns the content from a website URL",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "name": "url",
+        "type": "string",
+        "description": "The URL link to read"
+      },
+	  "question": {
+        "name": "question",
+        "type": "string",
+        "description": "The question you are trying to answer, or the information you need from reading this URL"
+      }
+    }
+  }
+}

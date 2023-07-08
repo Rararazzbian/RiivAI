@@ -7,7 +7,7 @@ The bot connects to Discord using the `discord.py` library and listens for messa
 
 ## Features
 -Function calling to external modules 📢
--Long Term Memory for User Traits and Nicknames 🧠
+-Long Term Memory for Key info, User Traits, and Nicknames 🧠
 -Stable Diffusion Image Generation 🖼️
 -(Limited) Internet Access 🔍
 With refined access to the following websites:

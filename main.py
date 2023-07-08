@@ -298,10 +298,10 @@ async def on_message(message):
                 nickname = run_function("user_nickname", {'action': 'get_nickname', 'user_id': f'{message.author.id}', 'server_id': f'{message.guild.id}'})
                 if nickname != f"No nickname found for user {message.author.id} in server {message.guild.id}":
                     # If a nickname is found, replace the users display name with the nickname
-                    content = f"[ID: {message.author.id}, Name: {nickname}]: {content}"
+                    content = f"[Current Time: {datetime.now()}, Name: {nickname}]: {content}"
                 else:
                     # If a nickname is not found, leave the message as is
-                    content = f"[Current Time: {datetime.now()}, ID: {message.author.id}, Name: {message.author.display_name}]: {content}"
+                    content = f"[Current Time: {datetime.now()}, Name: {message.author.display_name}]: {content}"
                 if len(message.attachments) > 0:
                     for file in message.attachments:
                         content = f"""{content}
@@ -323,20 +323,27 @@ async def on_message(message):
                 # Define some extra info which will be sent to the AI for additional context
                 info = f"""
 
-        Your responses are limited to a maximum of 1500 characters.
+-Function calling for accessing external services
+-Long Term Memory for User Traits and Nicknames 
+-Stable Diffusion Image Generation 
+-Internet Access
 
-        You have access to the following server emojis:
-        {emoji_list}
+Twitter capabilities are not possible without their paid API, if you ask the AI to read a twitter page, it will not be able to as Twitter will only respond with an error.
 
-        Current message context:
-        Message ID: "{message.id}"
-        Message Author: "{message.author.name}"
-        Message Author's Traits: {run_function("user_traits", {"action": "get_traits", "user_id": message.author.name})}
-        Message Author User ID: "{message.author.id}"
-        Message origins: From channel "{message.channel.name}" in server "{message.guild.name}"
-        Channel ID: "{message.channel.id}"
-        Server ID: "{message.guild.id}"
-        """
+Your responses are limited to a maximum of 1500 characters.
+
+You have access to the following server emojis:
+{emoji_list}
+
+Current message context:
+Message ID: "{message.id}"
+Message Author: "{message.author.name}"
+Message Author's Traits: {run_function("user_traits", {"action": "get_traits", "user_id": message.author.name})}
+Message Author User ID: "{message.author.id}"
+Message origins: From channel "{message.channel.name}" in server "{message.guild.name}"
+Channel ID: "{message.channel.id}"
+Server ID: "{message.guild.id}"
+"""
                 # Send the users message to the AI, alongside the conversation ID and info
                 await ai_reply(({"role": "user", "content": content}), conversation_id, info, message)
 

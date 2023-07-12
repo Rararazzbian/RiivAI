@@ -29,7 +29,7 @@ intents.messages = True
 intents.message_content = True
 
 # Define the bot
-bot = commands.Bot(command_prefix='.', intents=intents)
+bot = commands.Bot(command_prefix='$', intents=intents)
 
 # Print when the Discord bot has connected
 @bot.event
